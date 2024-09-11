@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchPokes } from '../redux/Pokemon/actionsOfPokes';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
@@ -10,24 +10,29 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import {capitalizeFirstLetter} from '../utils/generalFunction'
+import Pagination from '@mui/material/Pagination';
+import { capitalizeFirstLetter } from '../utils/generalFunction';
 
 function PokemonList() {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const { pokes, loading, error } = useSelector((state) => state.pokes);
 
   const [likedPokemons, setLikedPokemons] = useState({});
   const [hoveredPokemon, setHoveredPokemon] = useState(null);
+  const [page, setPage] = useState(1);
+  const pokesPerPage = 10;
+  
+  useEffect(() => {
+    dispatch(fetchPokes((page - 1) * pokesPerPage, pokesPerPage));
+  }, [dispatch, page]);
 
   useEffect(() => {
-    dispatch(fetchPokes(0, 20));
-
     const cachedLikes = localStorage.getItem('likedPokemons');
     if (cachedLikes) {
       setLikedPokemons(JSON.parse(cachedLikes));
     }
-  }, [dispatch]);
+  }, []);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
@@ -41,10 +46,12 @@ function PokemonList() {
     localStorage.setItem('likedPokemons', JSON.stringify(updatedLikes));
   };
 
-
-
   const goToDetail = (numberId) => {
     navigate(`/poke/detail/${numberId}`);
+  };
+
+  const handlePageChange = (event, value) => {
+    setPage(value);
   };
 
   return (
@@ -66,7 +73,7 @@ function PokemonList() {
       )}
 
       <Grid container spacing={2}>
-        {pokes.map((pokemon, index) => {
+        {pokes.map((pokemon) => {
           const url = pokemon.url;
           const numberId = url ? url.split('/').filter(Boolean).pop() : 'Unknown ID';
 
@@ -107,6 +114,15 @@ function PokemonList() {
             </Grid>
           );
         })}
+      </Grid>
+
+      <Grid container direction="column" alignItems="center" style={{ marginTop: '20px' }}>
+        <Pagination count={10}
+         variant="outlined" 
+         page={page} 
+         shape="rounded"
+         onChange={handlePageChange}
+          />
       </Grid>
     </div>
   );

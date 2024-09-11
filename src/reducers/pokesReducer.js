@@ -1,17 +1,17 @@
 const initialState = {
-  loading: false,
   pokes: [],
-  error: '',
+  loading: false,
+  error: null,
 };
 
 const pokesReducer = (state = initialState, action) => {
   switch (action.type) {
     case 'FETCH_POKES_REQUEST':
-      return { ...state, loading: true };
+      return { ...state, loading: true, error: null };
     case 'FETCH_POKES_SUCCESS':
-      return { loading: false, pokes: action.payload.results, error: '' };
+      return { ...state, pokes: action.payload, loading: false };
     case 'FETCH_POKES_FAILURE':
-      return { loading: false, pokes: [], error: action.payload };
+      return { ...state, loading: false, error: action.payload };
     default:
       return state;
   }

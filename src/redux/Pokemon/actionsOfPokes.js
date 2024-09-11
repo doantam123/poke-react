@@ -31,18 +31,25 @@ export const fetchPokesFailure = (error) => ({
 });
 
 // Thunk action creator get pokemon
-export const fetchPokes = (offset = 0, limit = 10) => {
-  return async (dispatch) => {
-    dispatch(fetchPokesRequest());
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API_POKEMON_V2}/pokemon?limit=${limit}&offset=${offset}`);
-      console.log(response)
-      dispatch(fetchPokesSuccess(response.data));
-    } catch (error) {
-      dispatch(fetchPokesFailure(error.message));
-    }
-  };
+export const fetchPokes = (offset, limit) => async (dispatch) => {
+  dispatch({ type: 'FETCH_POKES_REQUEST' });
+
+  try {
+    const response = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`);
+    const data = await response.json();
+
+    dispatch({
+      type: 'FETCH_POKES_SUCCESS',
+      payload: data.results,
+    });
+  } catch (error) {
+    dispatch({
+      type: 'FETCH_POKES_FAILURE',
+      payload: error.message,
+    });
+  }
 };
+
 
 // Thunk action creator get detail pokemon
 export const fetchPokeDetail = (id) => {
@@ -56,3 +63,4 @@ export const fetchPokeDetail = (id) => {
     }
   };
 };
+
