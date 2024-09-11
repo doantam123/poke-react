@@ -12,6 +12,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import Paper from '@mui/material/Paper';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchPokes } from '../redux/Pokemon/actionsOfPokes';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -58,77 +60,67 @@ export default function HeaderComponent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const pokes = useSelector((state) => state.pokes.pokes || []);
 
   useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (searchTerm.trim()) {
-        try {
-          const response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=1000`);
-          if (response.ok) {
-            const data = await response.json();
-            const filteredSuggestions = data.results
-              .filter(pokemon => pokemon.name.includes(searchTerm.toLowerCase()))
-              .map(pokemon => pokemon.name);
-            setSuggestions(filteredSuggestions);
-          }
-        } catch (error) {
-          console.error('Error fetching suggestions:', error);
-        }
-      } else {
-        setSuggestions([]);
-      }
-    };
+    if (searchTerm.trim()) {
+      // Gọi API tìm kiếm
+      dispatch(fetchPokes(0, 100, searchTerm)); // Lấy 100 Pokémon để tìm kiếm
+    }
+  }, [dispatch, searchTerm]);
 
-    fetchSuggestions();
-  }, [searchTerm]);
+  useEffect(() => {
+    if (searchTerm.trim() && pokes.length > 0) {
+      const filteredSuggestions = pokes
+        .filter((pokemon) => pokemon.name.includes(searchTerm.toLowerCase()))
+        .map((pokemon) => pokemon.name);
+      setSuggestions(filteredSuggestions);
+    } else {
+      setSuggestions([]);
+    }
+  }, [searchTerm, pokes]);
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
 
-  const handleSearchSubmit = async (event) => {
+  const handleSearchSubmit = (event) => {
     event.preventDefault();
     if (searchTerm.trim()) {
-      try {
-        const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${searchTerm.toLowerCase()}`);
-        if (response.ok) {
-          const pokemon = await response.json();
-          navigate(`/poke/detail/${pokemon.id}`);
-        } else {
-          alert('Pokemon not found');
-        }
-      } catch (error) {
-        console.error('Error fetching Pokémon:', error);
-        alert('Error fetching Pokémon');
+      const foundPokemon = pokes.find(
+        (pokemon) => pokemon.name.toLowerCase() === searchTerm.toLowerCase()
+      );
+      const url = foundPokemon?.url;
+      const numberId = url ? url.split('/').filter(Boolean).pop() : 'Unknown ID';
+      if (foundPokemon) {
+        navigate(`/poke/detail/${numberId}`);
+      } else {
+        alert('Pokemon not found');
       }
     }
   };
 
   const handleSuggestionClick = (suggestion) => {
-    setSearchTerm(suggestion);
-    setSuggestions([]);
-    handleSearchSubmit(new Event('submit'));
+    const foundPokemon = pokes.find((pokemon) => pokemon.name === suggestion);
+
+    if (foundPokemon) {
+      const url = foundPokemon.url;
+      const numberId = url ? url.split('/').filter(Boolean).pop() : 'Unknown ID';
+      navigate(`/poke/detail/${numberId}`);  
+    } else {
+      alert('Pokemon not found');
+    }
   };
 
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="open drawer"
-            sx={{ mr: 2 }}
-          >
+          <IconButton size="large" edge="start" color="inherit" aria-label="open drawer" sx={{ mr: 2 }}>
             <MenuIcon />
           </IconButton>
-          <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
-          >
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}>
             <Link to='/' style={{ color: 'white', textDecoration: 'none' }}>
               Pokemon Of @doantam123
             </Link>

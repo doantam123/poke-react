@@ -30,17 +30,36 @@ export const fetchPokesFailure = (error) => ({
   payload: error,
 });
 
-// Thunk action creator get pokemon
-export const fetchPokes = (offset, limit) => async (dispatch) => {
+//Search
+export const fetchSearchRequest = () => ({
+  type: 'FETCH_SEARCH_REQUEST',
+});
+
+export const fetchSearchSuccess = (data) => ({
+  type: 'FETCH_SEARCH_SUCCESS',
+  payload: data,
+});
+
+export const fetchSearchFailure = (error) => ({
+  type: 'FETCH_SEARCH_FAILURE',
+  payload: error,
+});
+
+export const fetchPokes = (offset, limit, searchTerm = '') => async (dispatch) => {
   dispatch({ type: 'FETCH_POKES_REQUEST' });
 
   try {
-    const response = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`);
+    const response = await fetch(`${process.env.REACT_APP_API_POKEMON_V2}/pokemon?offset=${offset}&limit=${limit}`);
     const data = await response.json();
+
+    // Nếu có từ khóa tìm kiếm, lọc kết quả
+    const filteredResults = searchTerm
+      ? data.results.filter(pokemon => pokemon.name.includes(searchTerm.toLowerCase()))
+      : data.results;
 
     dispatch({
       type: 'FETCH_POKES_SUCCESS',
-      payload: data.results,
+      payload: filteredResults,
     });
   } catch (error) {
     dispatch({
@@ -60,6 +79,19 @@ export const fetchPokeDetail = (id) => {
       dispatch(fetchPokeDetailSuccess(response.data));
     } catch (error) {
       dispatch(fetchPokeDetailFailure(error.message));
+    }
+  };
+};
+
+// Thunk action creator for search
+export const fetchSearch = (searchTerm) => {
+  return async (dispatch) => {
+    dispatch(fetchSearchRequest());
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_POKEMON_V2}/pokemon/${searchTerm.toLowerCase()}`);
+      dispatch(fetchSearchSuccess(response.data));
+    } catch (error) {
+      dispatch(fetchSearchFailure('Pokemon not found'));
     }
   };
 };
