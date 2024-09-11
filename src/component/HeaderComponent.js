@@ -8,6 +8,7 @@ import Typography from '@mui/material/Typography';
 import InputBase from '@mui/material/InputBase';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
+import { Link } from 'react-router-dom';
 
 
 const Search = styled('div')(({ theme }) => ({
@@ -72,7 +73,9 @@ export default function HeaderComponent() {
             component="div"
             sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
           >
-            Anh 3 báo nè
+            <Link to='/' style={{ color: 'white', textDecoration: 'none' }}>
+              Pokemon Of @doantam123
+            </Link>
           </Typography>
           <Search>
             <SearchIconWrapper>
